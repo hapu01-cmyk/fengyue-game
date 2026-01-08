@@ -129,9 +129,16 @@
                 <h3 class="font-title text-2xl text-[#4A2C40] mb-4 border-b pb-2">游戏设置</h3>
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Google Gemini API Key</label>
-                        <input id="api-key-input" type="password" placeholder="AIzaSy..." class="w-full p-2 border border-gray-300 rounded text-sm bg-white focus:border-[#C5A266] focus:ring-1 focus:ring-[#C5A266] outline-none">
-                        <p class="text-[10px] text-gray-500 mt-1">* 必填，用于生成剧情。免费申请：<a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-600 underline">Get Key</a></p>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">AI 厂商选择</label>
+                        <select id="api-model-select" class="w-full p-2 border border-gray-300 rounded text-sm bg-white outline-none focus:border-[#C5A266]">
+                            <option value="gemini">Google Gemini (推荐)</option>
+                            <option value="deepseek">DeepSeek (备用)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">对应 API Key</label>
+                        <input id="api-key-input" type="password" placeholder="请输入对应模型的 API Key" class="w-full p-2 border border-gray-300 rounded text-sm bg-white focus:border-[#C5A266] focus:ring-1 focus:ring-[#C5A266] outline-none">
+                        <p class="text-[10px] text-gray-500 mt-1">* 必填。Gemini 需由 Google AI Studio 提供；DeepSeek 需由官网提供。</p>
                     </div>
                     <div class="flex gap-2 pt-2">
                         <button onclick="GameApp.saveSettings()" class="flex-1 bg-[#4A2C40] text-white py-2 rounded hover:bg-[#2A1C20]">保存并关闭</button>
@@ -156,7 +163,7 @@
                 <div id="ai-loading" class="flex flex-col items-center py-8">
                     <div class="w-12 h-12 border-4 border-[#D1B2D2] border-t-[#4A2C40] rounded-full animate-spin mb-4"></div>
                     <p id="ai-loading-text" class="font-title text-lg text-[#4A2C40]">AI 正在生成...</p>
-                    <p class="text-xs text-gray-500 mt-2">Render 唤醒需 1-2 分钟，请耐心等待一次...</p>
+                    <p class="text-xs text-gray-500 mt-2">首次连接需 1-2 分钟唤醒服务器...</p>
                 </div>
                 <div id="ai-content" class="hidden">
                     <h2 id="ai-title" class="font-title text-xl text-[#C5A266] mb-2 border-b pb-2"></h2>
@@ -197,15 +204,15 @@
     const GameApp = (function() {
         
         // =========================================================
-        // 🚀【唯一修改点】请将下面的地址换成您的真实 Render 地址
+        // 🚀【唯一修改点】请将下面的地址换成您的真实 Render 后端地址
         // 例如：const SERVER_URL = "https://fengyue-backend.onrender.com";
         // =========================================================
         const SERVER_URL = "https://fengyue-backend.onrender.com"; 
 
-        // --- 私有变量 ---
         let _state = { gold: 10000, fame: 0, turn: 1, timeIdx: 6, tutorialStep: 0, tutorialDone: false };
         let _characters = [];
         let _apiKey = "";
+        let _apiProvider = "gemini"; // 新增：记录当前选择的模型供应商
 
         const _missions = [
             { id: 'm1', type: 'main', title: "初入京城", desc: "招募3名公子，充实后院。", target: 3, current: 0, done: false, check: () => _characters.length },
@@ -219,14 +226,19 @@
         const _timeLabels = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
 
         function init() {
+            // 读取保存的设置
             const storedKey = localStorage.getItem('fengyue_api_key');
+            const storedProvider = localStorage.getItem('fengyue_api_provider');
             if (storedKey) {
                 _apiKey = storedKey;
                 document.getElementById('api-key-input').value = storedKey;
             }
+            if (storedProvider) {
+                _apiProvider = storedProvider;
+                document.getElementById('api-model-select').value = storedProvider;
+            }
         }
 
-        // --- 核心：中转 API 调用 ---
         async function fetchAI(type, context) {
             try {
                 if (!_apiKey) {
@@ -234,49 +246,36 @@
                     return { title: "未配置", text: "请点击右上角⚙️配置您的 Key。", gold: 0 };
                 }
 
-                // 自动修正协议和结尾斜杠
                 let baseUrl = SERVER_URL.trim().replace(/\/$/, "");
                 if (baseUrl.startsWith("http://")) baseUrl = baseUrl.replace("http://", "https://");
                 const apiUrl = `${baseUrl}/api/proxy`;
 
-                console.log("%c[Network] Sending Request to:", "color: blue; font-weight: bold", apiUrl);
-
-                // 增加超时，防止 Render 唤醒时无响应 (60秒)
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 60000);
+                console.log("%c[Network] Sending to:", "color: blue; font-weight: bold", apiUrl);
 
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         userApiKey: _apiKey, 
+                        apiProvider: _apiProvider, // 新增：发送模型供应商类型
                         type: type, 
                         context: context 
-                    }),
-                    signal: controller.signal
+                    })
                 });
-                clearTimeout(timeoutId);
 
                 if (!response.ok) {
-                    // 核心修改：读取后端传回的 JSON 错误体，而不是直接抛错
-                    const errorData = await response.json().catch(() => ({}));
-                    console.error("%c[Server Error]", "color: red", errorData);
-                    throw new Error(errorData.text || `服务器错误: ${response.status}`);
+                    // 读取后端传回的错误体
+                    const errorBody = await response.json().catch(() => ({}));
+                    console.error("%c[Server Error]", "color: red", errorBody);
+                    throw new Error(errorBody.text || `HTTP ${response.status}`);
                 }
-                
-                const result = await response.json();
-                console.log("%c[Success]", "color: green", result);
-                return result;
+                return await response.json();
 
             } catch (e) {
                 console.error("%c[Fetch Failure]", "color: red; font-size: 16px", e);
-                let detail = e.message;
-                if (e.name === 'AbortError') detail = "请求超时。Render 免费版可能需要 1 分钟左右唤醒，请重试。";
-                else if (detail.includes('Failed to fetch')) detail = "连接被拒绝。请检查 SERVER_URL 是否填写正确，并确保后端已开启 CORS 允许。";
-                
                 return { 
                     title: "连接失败", 
-                    text: `具体原因：${detail}\n\n排查提示：\n1. 确保 Render 后端返回 Online 状态。\n2. 检查 SERVER_URL 是否以 https 开头且没有拼写错误。\n3. 如果是第一次玩，请多点几次直到服务器被唤醒。`, 
+                    text: `具体原因：${e.message}\n\n排查提示：\n1. 检查 API Key 是否对应当前选择的模型 (${_apiProvider})。\n2. 检查 SERVER_URL 地址是否正确。\n3. Render 免费版长时间未用需要唤醒，请重试。`, 
                     gold: 0 
                 };
             }
@@ -338,8 +337,16 @@
         return {
             openSettings: function() { document.getElementById('settings-modal').classList.remove('hidden'); },
             saveSettings: function() {
-                const val = document.getElementById('api-key-input').value.trim();
-                if(val) { _apiKey = val; localStorage.setItem('fengyue_api_key', val); showToast("API Key 已保存"); document.getElementById('settings-modal').classList.add('hidden'); }
+                const keyVal = document.getElementById('api-key-input').value.trim();
+                const providerVal = document.getElementById('api-model-select').value;
+                if(keyVal) { 
+                    _apiKey = keyVal; 
+                    _apiProvider = providerVal;
+                    localStorage.setItem('fengyue_api_key', keyVal); 
+                    localStorage.setItem('fengyue_api_provider', providerVal);
+                    showToast("设置已保存"); 
+                    document.getElementById('settings-modal').classList.add('hidden'); 
+                }
                 else showToast("Key 不能为空");
             },
             start: function(diff) {
@@ -395,7 +402,7 @@
                     container.innerHTML = html + "</div>";
                 } else if (tab === 'roster') {
                     if (_characters.length === 0) container.innerHTML = "<p class='text-center text-gray-500 mt-10'>名录空空如也。</p>";
-                    else container.innerHTML = `<h2 class="font-title text-3xl mb-6 text-center text-[#4A2C40]">蓝颜名录</h2><div class="space-y-3 max-w-2xl mx-auto">${_characters.map(c => `<div class="flex items-center gap-4 p-4 border border-gray-200 rounded-lg bg-white"><div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-xl border border-gray-200">${c.type==='star'?'✨':'🍃'}</div><div class="flex-1"><div class="flex justify-between"><span class="font-bold text-[#4A2C40]">${c.name}</span><span class="text-xs text-gray-400">入阁时间: 第${c.joinedAt}回合</span></div><div class="text-xs text-gray-500 line-clamp-1 mt-1">${c.desc}</div></div></div>`).join('')}</div>`;
+                    else container.innerHTML = `<h2 class="font-title text-3xl mb-6 text-center text-[#4A2C40]">蓝颜名录</h2><div class="space-y-3 max-w-2xl mx-auto">${_characters.map(c => `<div class="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:shadow-md bg-white transition"><div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-xl border border-gray-200">${c.type==='star'?'✨':'🍃'}</div><div class="flex-1"><div class="flex justify-between"><span class="font-bold text-[#4A2C40]">${c.name}</span><span class="text-xs text-gray-400">入阁时间: 第${c.joinedAt}回合</span></div><div class="text-xs text-gray-500 line-clamp-1 mt-1">${c.desc}</div></div></div>`).join('')}</div>`;
                 } else if (tab === 'sleep') {
                     container.innerHTML = `<div class="text-center mb-6"><h2 class="font-title text-3xl text-[#4A2C40]">揽月寝殿</h2><p class="text-gray-500 text-sm">今夜由谁伴驾？</p></div><div class="grid grid-cols-2 gap-4">${_characters.map(c => `<div onclick="GameApp.handleAIAction('sleep', {charName: '${c.name}'})" class="bg-[#4A2C40] p-4 rounded text-[#EAD7C3] border border-[#C5A266] text-center cursor-pointer hover:bg-[#683e5a] transition relative overflow-hidden group"><div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition"></div><div class="font-title text-2xl writing-vertical mx-auto h-24 flex items-center justify-center relative z-10">${c.name}</div><div class="text-xs mt-2 border-t border-white/20 pt-1 relative z-10">忠诚: ${c.loyalty}</div></div>`).join('')}</div>`;
                 }
