@@ -156,7 +156,7 @@
                 <div id="ai-loading" class="flex flex-col items-center py-8">
                     <div class="w-12 h-12 border-4 border-[#D1B2D2] border-t-[#4A2C40] rounded-full animate-spin mb-4"></div>
                     <p id="ai-loading-text" class="font-title text-lg text-[#4A2C40]">AI 正在生成...</p>
-                    <p class="text-xs text-gray-500 mt-2">Render 唤醒需 1-2 分钟，请耐心等待一次...</p>
+                    <p class="text-xs text-gray-500 mt-2">首次连接可能需 1-2 分钟唤醒服务器...</p>
                 </div>
                 <div id="ai-content" class="hidden">
                     <h2 id="ai-title" class="font-title text-xl text-[#C5A266] mb-2 border-b pb-2"></h2>
@@ -196,12 +196,13 @@
     <script>
     const GameApp = (function() {
         
-        // ==========================================
-        // 🚀【唯一修改点】请将下面的地址换成您的 Render 后端地址
+        // =========================================================
+        // 🚀【唯一修改点】请将下面的地址换成您的真实 Render 地址
         // 例如：const SERVER_URL = "https://fengyue-backend.onrender.com";
-        // ==========================================
+        // =========================================================
         const SERVER_URL = "https://fengyue-backend.onrender.com"; 
 
+        // --- 私有变量 ---
         let _state = { gold: 10000, fame: 0, turn: 1, timeIdx: 6, tutorialStep: 0, tutorialDone: false };
         let _characters = [];
         let _apiKey = "";
@@ -225,6 +226,7 @@
             }
         }
 
+        // --- 核心：中转 API 调用 ---
         async function fetchAI(type, context) {
             try {
                 if (!_apiKey) {
@@ -237,24 +239,44 @@
                 if (baseUrl.startsWith("http://")) baseUrl = baseUrl.replace("http://", "https://");
                 const apiUrl = `${baseUrl}/api/proxy`;
 
-                console.log("%c[Network] Sending to:", "color: blue; font-weight: bold", apiUrl);
+                console.log("%c[Network] Sending Request to:", "color: blue; font-weight: bold", apiUrl);
+                console.log("%c[Payload]", "color: gray", { type, context });
+
+                // 增加超时，防止 Render 唤醒时无响应 (60秒)
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 60000);
 
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userApiKey: _apiKey, type: type, context: context })
+                    body: JSON.stringify({ 
+                        userApiKey: _apiKey, 
+                        type: type, 
+                        context: context 
+                    }),
+                    signal: controller.signal
                 });
+                clearTimeout(timeoutId);
 
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+                    const errorText = await response.text();
+                    console.error("%c[Server Error]", "color: red", errorText);
+                    throw new Error(`服务器响应错误: ${response.status}`);
                 }
-                return await response.json();
+                
+                const result = await response.json();
+                console.log("%c[Success]", "color: green", result);
+                return result;
 
             } catch (e) {
                 console.error("%c[Fetch Failure]", "color: red; font-size: 16px", e);
+                let detail = e.message;
+                if (e.name === 'AbortError') detail = "请求超时。Render 免费版可能需要 1 分钟左右唤醒，请重试。";
+                else if (detail.includes('Failed to fetch')) detail = "连接被拒绝。请检查 SERVER_URL 是否填写正确，并确保后端已开启 CORS 允许。";
+                
                 return { 
                     title: "连接失败", 
-                    text: `无法连接到服务器。\n\n具体原因：${e.message}\n\n排查提示：\n1. 确保 Render 上的服务器已部署并返回 Online。\n2. 检查 SERVER_URL (${SERVER_URL}) 是否正确且使用了 https。\n3. Render 免费版长时间未用需要时间唤醒。`, 
+                    text: `具体原因：${detail}\n\n排查提示：\n1. 确保 Render 后端返回 Online 状态。\n2. 检查 SERVER_URL 是否以 https 开头且没有拼写错误。\n3. 如果是第一次玩，请多点几次直到服务器被唤醒。`, 
                     gold: 0 
                 };
             }
@@ -353,7 +375,7 @@
                 fetchAI(type, ctx).then(data => {
                     loading.classList.add('hidden'); content.classList.remove('hidden');
                     document.getElementById('ai-title').innerText = data.title || "事件";
-                    document.getElementById('ai-body').innerText = data.text || "服务器未返回文本。";
+                    document.getElementById('ai-body').innerText = data.text || "AI 似乎在打盹...";
                     if(data.gold) { _state.gold += data.gold; updateUI(); }
                 });
             },
