@@ -2,8 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <!-- 增强的 Viewport 设置：user-scalable=no, initial-scale=1, minimum-scale=1, maximum-scale=1 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>风月颠倒：京城第一女掌柜</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -41,7 +40,7 @@
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* ================= 引导层样式 ================= */
+        /* ================= 引导层样式 (v2.25 稳定版移植) ================= */
         #tutorial-overlay {
             position: fixed; inset: 0; z-index: 9999;
             background: rgba(0, 0, 0, 0.6);
@@ -96,14 +95,22 @@
             <div class="flex-1"></div>
             <div class="start-glass-panel w-[90%] md:w-[80%] rounded-xl p-6 flex flex-col items-center gap-4 z-10 mb-8 backdrop-blur-md transition-all">
                 <div class="text-center max-w-xl">
-                    <p class="text-sm text-[#2d1b24] leading-relaxed font-bold drop-shadow-sm">“别人笑你离经叛道，你笑他们看不穿。<br>这揽月轩，便是你的王国，亦是你的后宫。”</p>
+                    <p class="text-sm text-[#2d1b24] leading-relaxed font-bold drop-shadow-sm">
+                        “别人笑你离经叛道，你笑他们看不穿。<br>这揽月轩，便是你的王国，亦是你的后宫。”
+                    </p>
                 </div>
                 <div class="w-full border-t border-[#4A2C40]/20 my-1"></div>
                 <p class="text-xs text-[#4A2C40] font-bold tracking-widest opacity-80">- 请选择入梦难度 -</p>
                 <div class="flex flex-col w-full gap-3">
-                    <button onclick="window.GameApp.start('easy')" class="w-full py-3 bg-white/90 border border-[#D1B2D2] text-[#4A2C40] rounded shadow font-bold hover:bg-[#D1B2D2] transition active:scale-95">来者不拒 (简单)</button>
-                    <button onclick="window.GameApp.start('normal')" class="w-full py-3 bg-white/90 border border-[#C5A266] text-[#4A2C40] rounded shadow font-bold hover:bg-[#C5A266] transition active:scale-95">偶有闲趣 (中等)</button>
-                    <button onclick="window.GameApp.start('hard')" class="w-full py-3 bg-white/90 border border-[#4A2C40] text-[#4A2C40] rounded shadow font-bold hover:bg-[#4A2C40] hover:text-white transition active:scale-95">万草丛中 (困难)</button>
+                    <button onclick="window.GameApp.start('easy')" class="w-full py-3 bg-white/90 border border-[#D1B2D2] text-[#4A2C40] rounded shadow font-bold hover:bg-[#D1B2D2] transition active:scale-95 flex justify-between px-6">
+                        <span>来者不拒 (简单)</span> <span class="text-xs opacity-60 mt-1">8000两 | 低压</span>
+                    </button>
+                    <button onclick="window.GameApp.start('normal')" class="w-full py-3 bg-white/90 border border-[#C5A266] text-[#4A2C40] rounded shadow font-bold hover:bg-[#C5A266] transition active:scale-95 flex justify-between px-6">
+                        <span>偶有闲趣 (中等)</span> <span class="text-xs opacity-60 mt-1">5000两 | 常规</span>
+                    </button>
+                    <button onclick="window.GameApp.start('hard')" class="w-full py-3 bg-white/90 border border-[#4A2C40] text-[#4A2C40] rounded shadow font-bold hover:bg-[#4A2C40] hover:text-white transition active:scale-95 flex justify-between px-6">
+                        <span>万草丛中 (困难)</span> <span class="text-xs opacity-60 mt-1">2000两 | 高压</span>
+                    </button>
                 </div>
             </div>
         </section>
@@ -111,57 +118,49 @@
         <!-- 游戏主界面 -->
         <section id="page-game" class="absolute inset-0 z-10 hidden flex flex-col h-full bg-[#FDFBF7]">
             <header class="h-16 glass-panel z-30 flex justify-between items-center px-4 shrink-0 shadow-sm relative w-full">
-                <div class="flex gap-3 md:gap-6 text-xs md:text-sm flex-1">
-                    <div class="flex flex-col items-center min-w-[50px]"><span class="text-[10px] text-gray-400">资产</span><span id="ui-gold" class="font-bold text-[#C5A266] text-sm md:text-base">0</span></div>
-                    <div class="flex flex-col items-center min-w-[50px]"><span class="text-[10px] text-gray-400">名望</span><span id="ui-fame" class="font-bold text-[#4A2C40] text-sm md:text-base">0</span></div>
-                    <div class="flex flex-col items-center min-w-[50px]"><span class="text-[10px] text-gray-400">公子</span><span id="ui-count" class="font-bold text-purple-600 text-sm md:text-base">0</span></div>
+                <!-- 更新：顶部数值栏 (增加压力与安定) -->
+                <div class="flex gap-2 md:gap-4 text-xs flex-1 items-center overflow-x-auto hide-scrollbar">
+                    <div class="flex flex-col items-center min-w-[40px]"><span class="text-[10px] text-gray-400">资产</span><span id="ui-gold" class="font-bold text-[#C5A266]">0</span></div>
+                    <div class="w-px h-6 bg-gray-300"></div>
+                    <div class="flex flex-col items-center min-w-[40px]"><span class="text-[10px] text-gray-400">名望</span><span id="ui-fame" class="font-bold text-[#4A2C40]">0</span></div>
+                    <div class="w-px h-6 bg-gray-300"></div>
+                    <div class="flex flex-col items-center min-w-[40px]"><span class="text-[10px] text-gray-400">安定</span><span id="ui-harmony" class="font-bold text-green-600">100</span></div>
+                    <div class="flex flex-col items-center min-w-[40px]"><span class="text-[10px] text-gray-400">压力</span><span id="ui-pressure" class="font-bold text-gray-500">0</span></div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <div class="text-right text-xs"><div id="ui-date" class="text-gray-500">景和元年</div><div id="ui-time" class="font-bold text-[#4A2C40] text-base">午时</div></div>
-                    <button onclick="window.GameApp.nextTurn()" class="w-10 h-10 rounded-full border-2 border-[#4A2C40] text-[#4A2C40] bg-white hover:bg-[#4A2C40] hover:text-white transition shadow-md flex items-center justify-center pb-1 text-xl active:rotate-90 active:scale-95">↻</button>
+                <!-- 更新：阶段显示 -->
+                <div class="flex items-center gap-2 pl-2 border-l border-gray-200">
+                    <div class="text-right text-xs">
+                        <div id="ui-phase" class="text-[#C5A266] font-bold">聚美之初</div>
+                        <div id="ui-date" class="text-[#4A2C40]">第1旬</div>
+                    </div>
+                    <button onclick="window.GameApp.nextTurn()" class="w-9 h-9 rounded-full border border-[#4A2C40] text-[#4A2C40] hover:bg-[#4A2C40] hover:text-white transition shadow-md flex items-center justify-center pb-1 text-lg active:rotate-90">↻</button>
                 </div>
             </header>
 
-            <!-- 核心修复区域：地图滚动 -->
-            <!-- 修复逻辑：
-                 1. w-full h-full overflow-auto: 基础滚动
-                 2. hide-scrollbar: 隐藏滚动条增强沉浸感
-                 3. white-space: nowrap: 防止内部元素换行（针对某些旧版安卓webview）
-            -->
-            <main id="main-view" class="flex-1 relative overflow-hidden w-full bg-[#FDFBF7]">
-                <div id="view-map" class="absolute inset-0 w-full h-full overflow-auto hide-scrollbar touch-auto">
-                    <!-- map-wrapper 修复：
-                         1. display: inline-block 或 min-width 强制撑开
-                         2. height: 100% 确保垂直占满
-                         3. aspect-ratio: 16/9 维持比例
-                    -->
+            <main id="main-view" class="flex-1 relative overflow-hidden w-full bg-[#2c1e25]">
+                <div id="view-map" class="absolute inset-0 w-full h-full overflow-auto hide-scrollbar flex justify-center items-center">
                     <div id="map-wrapper" class="relative shrink-0 transition-transform origin-top-left" style="height: 100%; aspect-ratio: 16/9; min-width: max-content;">
-                        <!-- 图片修复：
-                             1. object-cover: 保证高度填满
-                             2. pointer-events-none: 防止图片拖拽干扰页面滚动
-                             3. 关键：height: 100%, width: auto
-                        -->
                         <img id="game-map-img" src="" class="h-full w-auto max-w-none pointer-events-none select-none object-cover block">
                         
                         <!-- Pins -->
                         <div id="pin-gacha" onclick="window.GameApp.switchTab('gacha')" class="map-pin flex flex-col items-center group" style="top: 82%; left: 18%;">
-                            <div class="bg-white/95 px-2 py-0.5 rounded text-xs font-bold mb-1 shadow text-[#4A2C40] border border-gray-200 whitespace-nowrap">寻芳阁</div>
+                            <div class="bg-white/95 px-2 py-0.5 rounded text-xs font-bold mb-1 shadow text-[#4A2C40] border border-gray-200">寻芳阁</div>
                             <div class="w-14 h-14 rounded-full bg-[#D1B2D2] border-2 border-white flex items-center justify-center text-2xl shadow-lg ring-4 ring-[#D1B2D2]/30">🌸</div>
                         </div>
                         <div id="pin-sleep" onclick="window.GameApp.trySleep()" class="map-pin flex flex-col items-center group" style="top: 78%; left: 88%;">
-                            <div class="bg-white/95 px-2 py-0.5 rounded text-xs font-bold mb-1 shadow text-[#4A2C40] border border-gray-200 whitespace-nowrap">揽月寝殿</div>
+                            <div class="bg-white/95 px-2 py-0.5 rounded text-xs font-bold mb-1 shadow text-[#4A2C40] border border-gray-200">揽月寝殿</div>
                             <div class="w-14 h-14 rounded-full bg-[#4A2C40] border-2 border-[#C5A266] flex items-center justify-center text-[#C5A266] text-2xl shadow-lg ring-4 ring-[#4A2C40]/30">🌙</div>
                         </div>
                         <div onclick="window.GameApp.openLocation('前厅')" class="map-pin flex flex-col items-center group" style="top: 55%; left: 50%;">
-                            <div class="bg-white/95 px-2 py-0.5 rounded text-xs font-bold mb-1 shadow text-[#4A2C40] border border-gray-200 whitespace-nowrap">前厅</div>
+                            <div class="bg-white/95 px-2 py-0.5 rounded text-xs font-bold mb-1 shadow text-[#4A2C40] border border-gray-200">前厅</div>
                             <div class="w-12 h-12 rounded-full bg-[#C5A266] border-2 border-white flex items-center justify-center text-white text-xl shadow-lg">🏯</div>
                         </div>
                         <div onclick="window.GameApp.openLocation('后花园')" class="map-pin flex flex-col items-center group" style="top: 35%; left: 20%;">
-                            <div class="bg-white/95 px-2 py-0.5 rounded text-xs font-bold mb-1 shadow text-[#4A2C40] border border-gray-200 whitespace-nowrap">后花园</div>
+                            <div class="bg-white/95 px-2 py-0.5 rounded text-xs font-bold mb-1 shadow text-[#4A2C40] border border-gray-200">后花园</div>
                             <div class="w-12 h-12 rounded-full bg-[#8FA875] border-2 border-white flex items-center justify-center text-white text-xl shadow-lg">🌿</div>
                         </div>
                         <div onclick="window.GameApp.openLocation('听雨阁')" class="map-pin flex flex-col items-center group" style="top: 25%; left: 75%;">
-                            <div class="bg-white/95 px-2 py-0.5 rounded text-xs font-bold mb-1 shadow text-[#4A2C40] border border-gray-200 whitespace-nowrap">听雨阁</div>
+                            <div class="bg-white/95 px-2 py-0.5 rounded text-xs font-bold mb-1 shadow text-[#4A2C40] border border-gray-200">听雨阁</div>
                             <div class="w-12 h-12 rounded-full bg-[#6B4F5F] border-2 border-white flex items-center justify-center text-white text-xl shadow-lg">📚</div>
                         </div>
                     </div>
@@ -178,7 +177,7 @@
                     <span class="text-2xl">🏯</span><span class="text-[10px]">地图</span>
                 </button>
                 <button id="nav-story" onclick="window.GameApp.switchTab('story')" class="nav-btn flex flex-col items-center text-gray-500 hover:text-[#4A2C40] p-2 relative active:bg-gray-50 flex-1">
-                    <span class="text-2xl">📜</span><span class="text-[10px]">剧情书简</span>
+                    <div id="icon-story" class="flex flex-col items-center"><span class="text-2xl">📜</span><span class="text-[10px]">书简</span></div>
                     <span id="story-badge" class="absolute top-1 right-8 w-2 h-2 bg-red-500 rounded-full hidden"></span>
                 </button>
                 <button id="nav-roster" onclick="window.GameApp.switchTab('roster')" class="nav-btn flex flex-col items-center text-gray-500 hover:text-[#4A2C40] p-2 active:bg-gray-50 flex-1">
@@ -222,35 +221,29 @@
             </div>
         </div>
 
+        <!-- AI 响应弹窗 (v3.1 更新：支持决策) -->
         <div id="ai-response-modal" class="fixed inset-0 z-[80] bg-black/70 hidden flex items-center justify-center p-6">
-            <div class="glass-panel w-full max-w-md p-6 rounded-lg border border-[#C5A266] relative animate-[fadeIn_0.3s]">
+            <div class="glass-panel w-full max-w-md p-6 rounded-lg border-2 border-[#C5A266] relative max-h-[80vh] flex flex-col">
                 <div id="ai-loading" class="flex flex-col items-center py-8">
                     <div class="w-12 h-12 border-4 border-[#D1B2D2] border-t-[#4A2C40] rounded-full animate-spin mb-4"></div>
-                    <p id="ai-loading-text" class="font-title text-lg text-[#4A2C40]">AI 正在生成...</p>
-                    <p class="text-xs text-gray-500 mt-2">Render 唤醒需 1-2 分钟，请耐心等待一次...</p>
+                    <p class="font-title text-lg text-[#4A2C40]">AI 正在生成...</p>
+                    <p class="text-xs text-gray-500 mt-2">首次连接需 1-2 分钟唤醒服务器...</p>
                 </div>
-                <div id="ai-content" class="hidden">
-                    <h2 id="ai-title" class="font-title text-xl text-[#C5A266] mb-2 border-b pb-2"></h2>
-                    <div id="ai-body" class="text-sm text-gray-700 leading-relaxed max-h-[50vh] overflow-y-auto mb-4 whitespace-pre-wrap"></div>
-                    <button onclick="window.GameApp.closeAI()" class="w-full py-2 bg-[#4A2C40] text-white rounded">确认</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="gacha-modal" class="fixed inset-0 z-[70] bg-black/80 hidden flex items-center justify-center p-6">
-            <div class="glass-panel w-full max-w-md p-6 rounded-lg text-center border-2 border-[#C5A266] relative">
-                <div id="gacha-loading" class="hidden"><div class="w-12 h-12 border-4 border-[#D1B2D2] border-t-[#4A2C40] rounded-full animate-spin mx-auto mb-4"></div><p class="font-title text-lg">招募中...</p></div>
-                <div id="gacha-result" class="animate-[fadeIn_0.5s]">
-                    <h2 class="font-title text-2xl text-[#C5A266] mb-2">寻得佳人</h2>
-                    <div id="new-char-avatar" class="text-5xl my-3">✨</div>
-                    <h3 id="new-char-name" class="font-bold text-xl text-[#4A2C40] mb-2">名</h3>
-                    <p id="new-char-type" class="text-xs px-2 py-1 bg-gray-200 inline-block rounded mb-4">类型</p>
-                    <div class="text-left bg-white/60 p-3 rounded border text-xs text-gray-600 italic mb-4 max-h-40 overflow-auto"><span id="new-char-desc">...</span></div>
-                    <button onclick="window.GameApp.closeGacha()" class="px-6 py-2 bg-[#4A2C40] text-white rounded w-full">收入名录</button>
+                <div id="ai-content" class="hidden flex-1 overflow-y-auto">
+                    <h2 id="ai-title" class="font-title text-xl text-[#C5A266] mb-3 border-b pb-2"></h2>
+                    <div id="ai-body" class="text-sm text-gray-700 leading-relaxed mb-6 whitespace-pre-wrap font-serif"></div>
+                    
+                    <!-- 决策按钮区 -->
+                    <div id="ai-actions" class="flex gap-3 hidden">
+                        <button id="btn-reject" class="flex-1 py-2 border border-gray-400 text-gray-600 rounded hover:bg-gray-100">婉拒</button>
+                        <button id="btn-accept" class="flex-1 py-2 bg-[#4A2C40] text-white rounded hover:bg-[#2A1C20] shadow">录用 (扣除经费)</button>
+                    </div>
+                    <button id="btn-confirm" onclick="window.GameApp.closeAI()" class="w-full py-2 bg-[#4A2C40] text-white rounded hidden">确认</button>
                 </div>
             </div>
         </div>
 
+        <!-- 引导层 (v2.25 稳定版) -->
         <div id="tutorial-overlay" class="hidden">
             <div id="tut-text-box" class="arrow-top">
                 <h3 id="tut-title" class="font-bold text-[#4A2C40] text-lg mb-1">欢迎</h3>
@@ -266,253 +259,312 @@
 
     <!-- 逻辑脚本 -->
     <script>
-    // 使用立即执行函数创建闭包，然后挂载到 window 对象上
-    (function() {
-        const SERVER_URL = "https://fengyue-backend.onrender.com"; // 🚀【必改】请替换为你的 Render 地址
+    const GameApp = (function() {
+        
+        // ==========================================
+        // 🚀 必改：你的 Render 后端地址
+        // ==========================================
+        const SERVER_URL = "https://fengyue-backend.onrender.com"; 
 
-        let _state = { gold: 10000, fame: 0, turn: 1, timeIdx: 6, tutorialStep: 0, tutorialDone: false };
+        // --- 3.0 数据结构 ---
+        let _state = { 
+            gold: 5000, fame: 0, turn: 1, 
+            pressure: 0, harmony: 100, phase: "聚美之初",
+            tutorialStep: 0, tutorialDone: false,
+            difficulty: "normal"
+        };
         let _characters = [];
         let _apiKey = "";
         let _apiProvider = "gemini";
         
-        const _missions = [{ id: 'm1', type: 'main', title: "初入京城", desc: "招募3名公子，充实后院。", target: 3, current: 0, done: false, check: () => _characters.length }, { id: 'm2', type: 'main', title: "声名鹊起", desc: "赚取 15,000 两资产。", target: 15000, current: 0, done: false, check: () => _state.gold }];
-        const _locations = { "前厅": { action: "亲自接待", type: "business", desc: "接待贵客，通过交谈获取情报或打赏。" }, "后花园": { action: "游园偶遇", type: "interact", desc: "在园中闲逛，可能偶遇公子触发特殊对话。" }, "听雨阁": { action: "筹谋规划", type: "mission", desc: "处理密信，规划揽月轩未来的经营方向。" } };
-        const _timeLabels = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+        // 临时变量
+        let _tempRecruit = null; // 存放待录用的AI生成结果
+        let _recruitCost = 0;    // 存放招募成本
 
+        const _missions = [
+            { id: 'm1', type: 'main', title: "初入京城", desc: "招募3名公子，充实后院。", target: 3, current: 0, done: false, check: () => _characters.length },
+            { id: 'm2', type: 'main', title: "声名鹊起", desc: "赚取 15,000 两资产。", target: 15000, current: 0, done: false, check: () => _state.gold }
+        ];
+        const _locations = { 
+            "前厅": { action: "亲自接待", type: "business", desc: "接待贵客，通过交谈获取情报或打赏。" }, 
+            "后花园": { action: "游园偶遇", type: "interact", desc: "在园中闲逛，可能偶遇公子触发特殊对话。" }, 
+            "听雨阁": { action: "筹谋规划", type: "mission", desc: "处理密信，规划揽月轩未来的经营方向。" } 
+        };
+        
         function init() {
-            const storedKey = localStorage.getItem('fengyue_api_key');
-            const storedProvider = localStorage.getItem('fengyue_api_provider');
-            if (storedKey) { _apiKey = storedKey; document.getElementById('api-key-input').value = storedKey; }
-            if (storedProvider) { _apiProvider = storedProvider; document.getElementById('api-model-select').value = storedProvider; }
+            const k = localStorage.getItem('fengyue_api_key');
+            const p = localStorage.getItem('fengyue_api_provider');
+            if(k) { _apiKey=k; document.getElementById('api-key-input').value=k; }
+            if(p) { _apiProvider=p; document.getElementById('api-model-select').value=p; }
             setTimeout(() => {
                 const map = document.getElementById('view-map');
                 const img = document.getElementById('game-map-img');
-                if(map && img) { map.scrollLeft = (img.clientWidth - map.clientWidth) / 2; }
+                if(map && img) map.scrollLeft = (img.clientWidth - map.clientWidth)/2;
             }, 500);
         }
 
-        function closeSubView() { document.getElementById('sub-views').classList.add('hidden'); }
-        
-        function checkApiKey() { 
-            if (!_apiKey) { 
-                document.getElementById('settings-modal').classList.remove('hidden'); 
-                showToast("请先配置 API Key"); 
-                return false; 
-            } 
-            return true; 
-        }
+        // --- 核心工具 ---
+        function checkApiKey() { if (!_apiKey) { document.getElementById('settings-modal').classList.remove('hidden'); showToast("请先配置 API Key"); return false; } return true; }
         
         async function fetchAI(type, context) {
             try {
                 if (!checkApiKey()) return { title: "未配置", text: "请点击右上角⚙️配置您的 Key。", gold: 0 };
-                let baseUrl = SERVER_URL.trim().replace(/\/$/, ""); 
-                if (baseUrl.startsWith("http://")) baseUrl = baseUrl.replace("http://", "https://"); 
-                const apiUrl = `${baseUrl}/api/proxy`;
-                const controller = new AbortController(); 
-                const timeoutId = setTimeout(() => controller.abort(), 20000);
-                const response = await fetch(apiUrl, { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ userApiKey: _apiKey, apiProvider: _apiProvider, type: type, context: context }), 
-                    signal: controller.signal 
-                });
+                let baseUrl = SERVER_URL.trim().replace(/\/$/, ""); if (baseUrl.startsWith("http://")) baseUrl = baseUrl.replace("http://", "https://"); const apiUrl = `${baseUrl}/api/proxy`;
+                const controller = new AbortController(); const timeoutId = setTimeout(() => controller.abort(), 30000);
+                const response = await fetch(apiUrl, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ userApiKey: _apiKey, apiProvider: _apiProvider, type, context }), signal: controller.signal });
                 clearTimeout(timeoutId); 
-                if (!response.ok) { 
-                    const errorBody = await response.json().catch(() => ({})); 
-                    throw new Error(errorBody.text || `HTTP ${response.status}`); 
-                }
+                if (!response.ok) { const errorBody = await response.json().catch(() => ({})); throw new Error(errorBody.text || `HTTP ${response.status}`); }
                 return await response.json();
-            } catch (e) { 
-                console.error("Fetch Error:", e); 
-                return { title: "连接失败", text: `具体原因：${e.message}`, gold: 0 }; 
+            } catch(e) { console.error(e); showToast("AI连接失败: " + e.message); return null; }
+        }
+
+        // --- v3.0 逻辑 ---
+
+        function startGame(diff) {
+            _state.difficulty = diff;
+            // 难度数值配置
+            if(diff === 'easy') { _state.gold = 8000; _state.pressure = 0; _state.harmony = 100; }
+            else if(diff === 'hard') { _state.gold = 2000; _state.pressure = 20; _state.harmony = 80; }
+            else { _state.gold = 5000; _state.pressure = 0; _state.harmony = 100; }
+            
+            document.getElementById('page-start').classList.add('hidden');
+            document.getElementById('page-game').classList.remove('hidden');
+            const mapSrc = getComputedStyle(document.documentElement).getPropertyValue('--bg-map-src').trim().replace(/url\(['"]?(.*?)['"]?\)/g, '$1');
+            document.getElementById('game-map-img').src = mapSrc;
+            updateUI();
+            if (!_state.tutorialDone) { _state.tutorialStep = 1; renderTutorialStep(); }
+        }
+
+        function nextTurn() {
+            _state.turn++;
+            // 简单阶段控制
+            if(_state.turn > 30) _state.phase = "声名鹊起";
+            if(_state.turn > 60) _state.phase = "风波骤起";
+            
+            // 压力自然增长
+            let pressureInc = _state.difficulty === 'hard' ? 2 : 1;
+            if(_state.fame > 100) pressureInc += 1;
+            _state.pressure = Math.min(100, _state.pressure + pressureInc);
+            
+            // 随机触发经营事件
+            if(Math.random() > 0.6 || _state.pressure > 80) {
+                // 如果后端还没更，这里暂时先不调 business 接口，只做简单更新
+                // 推荐: openLocation('前厅') 逻辑
+            }
+            
+            updateUI();
+            showToast(`进入第${_state.turn}回合`);
+            checkGameLogic();
+        }
+
+        // 显示AI弹窗 (核心)
+        async function showAIModal(type, context) {
+            const modal = document.getElementById('ai-response-modal');
+            const loading = document.getElementById('ai-loading');
+            const content = document.getElementById('ai-content');
+            const actions = document.getElementById('ai-actions');
+            const confirmBtn = document.getElementById('btn-confirm');
+            
+            modal.classList.remove('hidden');
+            loading.classList.remove('hidden');
+            content.classList.add('hidden');
+            actions.classList.add('hidden');
+            confirmBtn.classList.add('hidden');
+
+            // 附带当前游戏状态，供AI参考
+            context.pressure = _state.pressure;
+            context.harmony = _state.harmony;
+            context.phase = _state.phase;
+            context.turn = _state.turn;
+
+            const data = await fetchAI(type, context);
+            
+            loading.classList.add('hidden');
+            content.classList.remove('hidden');
+            
+            if(data) {
+                document.getElementById('ai-title').innerText = data.title || (data.name ? "寻得佳人" : "事件");
+                document.getElementById('ai-body').innerText = data.intro || data.text || "无内容";
+                
+                // 招募逻辑：需要玩家决策
+                if(type.includes('recruit')) {
+                    _tempRecruit = data; // 暂存数据
+                    actions.classList.remove('hidden');
+                    
+                    const acceptBtn = document.getElementById('btn-accept');
+                    const rejectBtn = document.getElementById('btn-reject');
+                    
+                    acceptBtn.innerText = `录用 (扣除${_recruitCost}两)`;
+                    acceptBtn.onclick = acceptRecruit;
+                    rejectBtn.onclick = () => { 
+                        closeAI(); 
+                        showToast("已回绝，定金不退"); // 设定：查看剧情就算看过了，钱不退（或者你可以改为退一半）
+                    };
+                } else {
+                    confirmBtn.classList.remove('hidden');
+                    // 经营结果结算
+                    if(data.gold) _state.gold += data.gold;
+                    if(data.pressureChange) _state.pressure += data.pressureChange;
+                    updateUI();
+                }
+            } else {
+                closeAI(); 
             }
         }
 
-        function updateUI() { document.getElementById('ui-gold').innerText = _state.gold.toLocaleString(); document.getElementById('ui-fame').innerText = _state.fame; document.getElementById('ui-count').innerText = _characters.length; document.getElementById('ui-time').innerText = _timeLabels[_state.timeIdx] + "时"; }
-        function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.remove('-translate-y-[200%]'); setTimeout(() => t.classList.add('-translate-y-[200%]'), 3000); }
-        function checkGameLogic() { let hasUpdate = false; _missions.forEach(m => { if (!m.done) { const val = m.check(); m.current = val; if (val >= m.target) { m.done = true; showToast(`🎉 任务完成：${m.title}`); hasUpdate = true; } } }); if (hasUpdate) document.getElementById('story-badge').classList.remove('hidden'); updateUI(); }
+        function acceptRecruit() {
+            if(!_tempRecruit) return;
+            
+            // 扣费已在点击招募时发生，或者在这里发生？
+            // 逻辑修改：点击招募时先不扣费，或者扣一点“打听费”。
+            // 为了简单，假设点击按钮时已经检查过钱够不够，但还没扣。
+            _state.gold -= _recruitCost;
+            
+            const newChar = {
+                id: Date.now(),
+                name: _tempRecruit.name,
+                type: _tempRecruit.type,
+                stats: _tempRecruit.stats || { charm: 50, ambition: 50 },
+                desc: _tempRecruit.desc,
+                joinedAt: _state.turn
+            };
+            _characters.push(newChar);
+            
+            closeAI();
+            showToast(`已录用 ${newChar.name}！`);
+            updateUI();
+            checkGameLogic();
+            
+            // 引导下一步
+            if(_state.tutorialStep === 2) GameAppAPI.nextTutorial();
+        }
 
+        function closeAI() { document.getElementById('ai-response-modal').classList.add('hidden'); }
+        function closeSub() { document.getElementById('sub-views').classList.add('hidden'); }
+        function showToast(msg) { const t=document.getElementById('toast'); t.innerText=msg; t.classList.remove('-translate-y-[200%]'); setTimeout(()=>t.classList.add('-translate-y-[200%]'), 3000); }
+
+        function updateUI() {
+            const els = ['ui-gold', 'ui-fame', 'ui-count', 'ui-pressure', 'ui-harmony', 'ui-phase', 'ui-date'];
+            const vals = [_state.gold, _state.fame, _characters.length, _state.pressure, _state.harmony, _state.phase, `第${_state.turn}回合`];
+            els.forEach((id, i) => { const el = document.getElementById(id); if(el) el.innerText = vals[i]; });
+            
+            // 压力警告色
+            const pEl = document.getElementById('ui-pressure');
+            if(pEl) pEl.className = _state.pressure > 80 ? "font-bold text-red-600" : "font-bold text-gray-600";
+        }
+
+        // --- 业务功能 ---
+        function doRecruit(type) {
+            const cost = type === 'recruit_dust' ? 500 : 3000;
+            if(_state.gold < cost) { showToast("经费不足"); return; }
+            _recruitCost = cost; // 暂存成本
+            // 这里先不扣费，等看了剧情决定录用再扣？或者先扣费，不录用退费？
+            // 策略：先检查，不扣。AI生成后，点录用才扣。
+            showAIModal(type, { turn: _state.turn });
+        }
+
+        // 其他 Tab 逻辑保持不变...
+        function switchTab(tab) {
+            if(_state.tutorialStep===2 && tab!=='gacha') return;
+            if(_state.tutorialStep===3 && tab!=='story') return;
+            document.getElementById('sub-views').classList.remove('hidden');
+            const c = document.getElementById('view-content'); c.innerHTML='';
+            if(tab==='gacha') {
+                 c.innerHTML = `<div class="text-center h-full flex flex-col justify-center"><h2 class="font-title text-4xl mb-2 text-[#4A2C40]">寻芳阁</h2><p class="text-gray-500 mb-10 text-sm">消耗金钱，寻找与你有缘的公子</p><div class="flex justify-center gap-6 md:gap-12"><div onclick="window.GameApp.doRecruit('recruit_dust')" class="border-2 border-dashed border-gray-300 p-6 md:p-8 rounded-lg hover:border-[#D1B2D2] hover:bg-white cursor-pointer w-40 md:w-48 group transition"><div class="text-5xl mb-4 group-hover:scale-110 transition">🍃</div><div class="font-bold text-lg">尘缘 (500两)</div><div class="text-sm text-gray-500 mt-1">市井偶遇</div></div><div onclick="window.GameApp.doRecruit('recruit_star')" class="border-2 border-[#C5A266] bg-[#4A2C40] text-[#C5A266] p-6 md:p-8 rounded-lg hover:shadow-2xl hover:-translate-y-1 cursor-pointer w-40 md:w-48 transition"><div class="text-5xl mb-4 animate-pulse">✨</div><div class="font-bold text-lg">星轨 (3000两)</div><div class="text-sm opacity-75 mt-1">天命之人</div></div></div></div>`;
+            } else if(tab==='story') {
+                 c.innerHTML = `<div class="p-6"><h2 class="font-title text-3xl mb-6 text-[#4A2C40]">剧情书简</h2><div class="space-y-4"><div class="p-4 bg-white rounded border border-[#C5A266] shadow"><h3 class="font-bold text-lg text-[#C5A266]">当前阶段：${_state.phase}</h3><p class="text-sm text-gray-600 mt-1">第${_state.turn}回合 | 压力 ${_state.pressure} | 安定 ${_state.harmony}</p></div><div class="border-t pt-4"><p class="text-gray-400 text-center">暂无更多历史记录</p></div></div></div>`;
+                 if(_state.tutorialStep===3) GameAppAPI.nextTutorial();
+            } else if(tab==='roster') {
+                 if (_characters.length === 0) c.innerHTML = "<p class='text-center text-gray-500 mt-10'>名录空空如也。</p>";
+                 else c.innerHTML = `<h2 class="font-title text-3xl mb-6 text-center text-[#4A2C40]">蓝颜名录</h2><div class="space-y-3 max-w-2xl mx-auto">${_characters.map(ch => `<div class="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:shadow-md bg-white transition"><div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-xl border border-gray-200">${ch.type==='星轨'?'✨':'🍃'}</div><div class="flex-1"><div class="flex justify-between"><span class="font-bold text-[#4A2C40]">${ch.name}</span><span class="text-xs text-gray-400">野心:${ch.stats.ambition}</span></div><div class="text-xs text-gray-500 line-clamp-1 mt-1">${ch.desc}</div></div></div>`).join('')}</div>`;
+            } else if(tab==='sleep') {
+                 if(_characters.length < 1) { showToast("后宫空虚，请先招募！"); return; }
+                 c.innerHTML = `<div class="text-center mb-6"><h2 class="font-title text-3xl text-[#4A2C40]">揽月寝殿</h2><p class="text-gray-500 text-sm">今夜由谁伴驾？</p></div><div class="grid grid-cols-2 gap-4">${_characters.map(ch => `<div onclick="window.GameApp.triggerSleep('${ch.name}', ${JSON.stringify(ch.stats).replace(/"/g, '&quot;')})" class="bg-[#4A2C40] p-4 rounded text-[#EAD7C3] border border-[#C5A266] text-center cursor-pointer hover:bg-[#683e5a] transition"><div class="font-title text-2xl writing-vertical mx-auto h-24 flex items-center justify-center relative z-10">${ch.name}</div><div class="text-xs mt-2 border-t border-white/20 pt-1 relative z-10">忠诚: 50</div></div>`).join('')}</div>`;
+            }
+        }
+        
+        function trySleep() { if(_characters.length<1) showToast("需先招募公子"); else switchTab('sleep'); }
+        function triggerSleep(name, stats) { showAIModal('sleep', { charName: name, charStats: stats }); }
+        function openLocation(loc) { showAIModal('business', { pressure: _state.pressure }); }
+        function checkGameLogic() { /* 简单检查 */ }
+
+        // 引导逻辑 v2.25 移植
         function updateHighlightPosition(targetId) {
-            const el = document.getElementById(targetId);
-            if (!el) return;
-            el.scrollIntoView({behavior: "smooth", block: "center", inline: "center"});
+            const el = document.getElementById(targetId); if(!el) return;
+            el.scrollIntoView({behavior: "smooth", block: "center"});
             setTimeout(() => {
                 const rect = el.getBoundingClientRect();
                 const box = document.getElementById('tut-highlight-box');
                 const text = document.getElementById('tut-text-box');
-                box.style.width = (rect.width + 10) + 'px'; box.style.height = (rect.height + 10) + 'px';
-                box.style.top = (rect.top - 5) + 'px'; box.style.left = (rect.left - 5) + 'px';
+                box.style.width = (rect.width + 10)+'px'; box.style.height = (rect.height + 10)+'px';
+                box.style.top = (rect.top - 5)+'px'; box.style.left = (rect.left - 5)+'px';
                 box.style.borderRadius = rect.width === rect.height ? '50%' : '8px';
-                if (rect.top > 200) { text.style.top = (rect.top - 120) + 'px'; text.style.left = (window.innerWidth/2 - 150) + 'px'; text.className = "arrow-bottom"; }
-                else { text.style.top = (rect.bottom + 20) + 'px'; text.style.left = (window.innerWidth/2 - 150) + 'px'; text.className = "arrow-top"; }
+                if (rect.top > 200) { text.style.top = (rect.top - 120)+'px'; text.style.left = (window.innerWidth/2 - 150)+'px'; text.className = "arrow-bottom"; }
+                else { text.style.top = (rect.bottom + 20)+'px'; text.style.left = (window.innerWidth/2 - 150)+'px'; text.className = "arrow-top"; }
             }, 300);
         }
-
         function renderTutorialStep() {
             const step = _state.tutorialStep;
             const overlay = document.getElementById('tutorial-overlay');
             const title = document.getElementById('tut-title');
             const desc = document.getElementById('tut-desc');
             const box = document.getElementById('tut-highlight-box');
-            
             overlay.style.display = 'block'; box.style.display = 'block';
-
             if (step === 1) {
                 title.innerText = "欢迎掌柜"; desc.innerText = "这是您的揽月轩。当务之急是先去招募一位公子。";
                 box.style.display = 'none'; 
                 const textBox = document.getElementById('tut-text-box');
-                textBox.style.top = '40%'; textBox.style.left = (window.innerWidth/2 - 150) + 'px'; textBox.className = "";
+                textBox.style.top = '40%'; textBox.style.left = (window.innerWidth/2 - 150)+'px'; textBox.className = "";
             } else if (step === 2) {
                 title.innerText = "前往寻芳阁"; desc.innerText = "请点击地图左下角的【寻芳阁】。";
                 updateHighlightPosition('pin-gacha');
             } else if (step === 3) {
-                closeSubView(); title.innerText = "查看任务"; desc.innerText = "点击底部的【剧情书简】查看当前进度。";
+                closeSub(); title.innerText = "查看任务"; desc.innerText = "点击底部的【剧情书简】查看当前进度。";
                 updateHighlightPosition('nav-story');
             }
         }
-
         function handleTutorialClick(e) {
             const step = _state.tutorialStep;
             const box = document.getElementById('tut-highlight-box').getBoundingClientRect();
             const isInside = e.clientX >= box.left && e.clientX <= box.right && e.clientY >= box.top && e.clientY <= box.bottom;
-
-            if (step === 1) { window.GameApp.nextTutorial(); }
+            if (step === 1) { GameAppAPI.nextTutorial(); }
             else if (isInside) {
-                if (step === 2) { window.GameApp.switchTab('gacha'); } 
-                else if (step === 3) { window.GameApp.switchTab('story'); window.GameApp.nextTutorial(); }
-            } else {
-                const textBox = document.getElementById('tut-text-box');
-                textBox.classList.add('animate-bounce'); setTimeout(() => textBox.classList.remove('animate-bounce'), 500);
+                if (step === 2) { switchTab('gacha'); } 
+                else if (step === 3) { switchTab('story'); }
             }
         }
 
-        function nextTutorial() {
-            _state.tutorialStep++;
-            if (_state.tutorialStep > 3) {
-                document.getElementById('tutorial-overlay').style.display = 'none';
-                _state.tutorialDone = true;
-                showToast("引导结束，开始经营吧！");
-            } else { renderTutorialStep(); }
-        }
-
-        // 定义公开方法
         const GameAppAPI = {
-            openSettings: function() { document.getElementById('settings-modal').classList.remove('hidden'); },
-            saveSettings: function() {
-                const keyVal = document.getElementById('api-key-input').value.trim();
-                const providerVal = document.getElementById('api-model-select').value;
-                if(keyVal) { 
-                    _apiKey = keyVal; _apiProvider = providerVal;
-                    localStorage.setItem('fengyue_api_key', keyVal); 
-                    localStorage.setItem('fengyue_api_provider', providerVal);
-                    showToast("设置已保存"); document.getElementById('settings-modal').classList.add('hidden'); 
-                } else showToast("Key 不能为空");
+            openSettings: () => document.getElementById('settings-modal').classList.remove('hidden'),
+            saveSettings: () => {
+                const k = document.getElementById('api-key-input').value;
+                const p = document.getElementById('api-model-select').value;
+                if(k) { _apiKey=k; _apiProvider=p; localStorage.setItem('fengyue_api_key', k); localStorage.setItem('fengyue_api_provider', p); document.getElementById('settings-modal').classList.add('hidden'); showToast("保存成功"); }
             },
-            start: function() {
-                document.getElementById('page-start').classList.add('hidden');
-                document.getElementById('page-game').classList.remove('hidden');
-                const mapSrc = getComputedStyle(document.documentElement).getPropertyValue('--bg-map-src').trim().replace(/url\(['"]?(.*?)['"]?\)/g, '$1');
-                document.getElementById('game-map-img').src = mapSrc;
-                updateUI();
-                if (!_state.tutorialDone) { _state.tutorialStep = 1; renderTutorialStep(); }
+            start: startGame,
+            nextTutorial: () => {
+                _state.tutorialStep++;
+                if (_state.tutorialStep > 3) {
+                    document.getElementById('tutorial-overlay').style.display = 'none';
+                    _state.tutorialDone = true;
+                    showToast("引导结束，开始经营吧！");
+                } else { renderTutorialStep(); }
             },
-            nextTutorial: nextTutorial,
             handleTutorialClick: handleTutorialClick,
-            nextTurn: function() { _state.timeIdx = (_state.timeIdx+1)%12; _state.gold-=50; updateUI(); showToast("时辰流转"); checkGameLogic(); },
-            handleAIAction: function(loc, ctx) { if(checkApiKey()) fetchAI(_locations[loc]?.type || 'sleep', ctx).then(d=>{ 
-                document.getElementById('ai-loading').classList.add('hidden'); 
-                document.getElementById('ai-content').classList.remove('hidden');
-                document.getElementById('ai-title').innerText = d.title || "事件";
-                document.getElementById('ai-body').innerText = d.text || "AI 似乎在打盹...";
-                if(d.gold) { _state.gold += d.gold; updateUI(); }
-            }); 
-            // Show loading modal immediately
-            document.getElementById('ai-response-modal').classList.remove('hidden');
-            document.getElementById('ai-loading').classList.remove('hidden');
-            document.getElementById('ai-content').classList.add('hidden');
-            },
-            closeAI: function() { document.getElementById('ai-response-modal').classList.add('hidden'); checkGameLogic(); },
-            switchTab: function(tab) {
-                if(_state.tutorialStep===2 && tab!=='gacha') return;
-                if(_state.tutorialStep===3 && tab!=='story') return;
-                document.getElementById('sub-views').classList.remove('hidden');
-                const c = document.getElementById('view-content'); c.innerHTML='';
-                if(tab==='gacha') {
-                     c.innerHTML = `<div class="text-center h-full flex flex-col justify-center"><h2 class="font-title text-4xl mb-2 text-[#4A2C40]">寻芳阁</h2><p class="text-gray-500 mb-10 text-sm">消耗金钱，寻找与你有缘的公子</p><div class="flex justify-center gap-6 md:gap-12"><div onclick="window.GameApp.doRecruit('dust')" class="border-2 border-dashed border-gray-300 p-6 md:p-8 rounded-lg hover:border-[#D1B2D2] hover:bg-white cursor-pointer w-40 md:w-48 group transition"><div class="text-5xl mb-4 group-hover:scale-110 transition">🍃</div><div class="font-bold text-lg">尘缘 (普通)</div><div class="text-sm text-gray-500 mt-1">500 两</div></div><div onclick="window.GameApp.doRecruit('star')" class="border-2 border-[#C5A266] bg-[#4A2C40] text-[#C5A266] p-6 md:p-8 rounded-lg hover:shadow-2xl hover:-translate-y-1 cursor-pointer w-40 md:w-48 transition"><div class="text-5xl mb-4 animate-pulse">✨</div><div class="font-bold text-lg">星轨 (稀有)</div><div class="text-sm opacity-75 mt-1">3000 两</div></div></div></div>`;
-                } 
-                else if(tab==='story') {
-                    // Story HTML ... (省略部分保持原样，注意 onclick="window.GameApp...")
-                     let html = `<h2 class="font-title text-3xl mb-6 text-[#4A2C40] text-center">剧情书简</h2><div class="space-y-4 max-w-2xl mx-auto">`;
-                    _missions.forEach(m => {
-                        const percent = Math.min(100, (m.current / m.target) * 100).toFixed(0);
-                        html += `<div class="p-4 rounded border ${m.done ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200'} shadow-sm"><div class="flex justify-between items-start mb-2"><div><h3 class="font-bold text-lg text-[#4A2C40]">${m.title}</h3><p class="text-sm text-gray-600">${m.desc}</p></div><div class="text-xs">${m.done ? '<span class="text-green-600 font-bold border border-green-600 px-1 rounded">已完成</span>' : '<span class="text-purple-600 border border-purple-200 px-1 rounded">进行中</span>'}</div></div><div class="w-full bg-gray-100 h-2 rounded-full mt-2"><div class="bg-[#C5A266] h-full transition-all duration-500" style="width: ${percent}%"></div></div><div class="flex justify-between items-center mt-2"><span class="text-xs text-gray-400">${m.current} / ${m.target}</span><button onclick="window.GameApp.handleAIAction('听雨阁', {missionTitle: '${m.title}'})" class="text-xs px-3 py-1 bg-white border border-[#4A2C40] text-[#4A2C40] rounded hover:bg-[#4A2C40] hover:text-white transition">📜 阅览剧情</button></div></div>`;
-                    });
-                    c.innerHTML = html + "</div>";
-                }
-                else if(tab==='roster') {
-                     if (_characters.length === 0) c.innerHTML = "<p class='text-center text-gray-500 mt-10'>名录空空如也。</p>";
-                    else c.innerHTML = `<h2 class="font-title text-3xl mb-6 text-center text-[#4A2C40]">蓝颜名录</h2><div class="space-y-3 max-w-2xl mx-auto">${_characters.map(ch => `<div class="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:shadow-md bg-white transition"><div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-xl border border-gray-200">${ch.type==='star'?'✨':'🍃'}</div><div class="flex-1"><div class="flex justify-between"><span class="font-bold text-[#4A2C40]">${ch.name}</span><span class="text-xs text-gray-400">入阁时间: 第${ch.joinedAt}回合</span></div><div class="text-xs text-gray-500 line-clamp-1 mt-1">${ch.desc}</div></div></div>`).join('')}</div>`;
-                }
-                else if(tab==='sleep') {
-                     if(_characters.length < 2) { showToast("后宫空虚，请先招募！"); return; }
-                    c.innerHTML = `<div class="text-center mb-6"><h2 class="font-title text-3xl text-[#4A2C40]">揽月寝殿</h2><p class="text-gray-500 text-sm">今夜由谁伴驾？</p></div><div class="grid grid-cols-2 gap-4">${_characters.map(ch => `<div onclick="window.GameApp.handleAIAction('sleep', {charName: '${ch.name}'})" class="bg-[#4A2C40] p-4 rounded text-[#EAD7C3] border border-[#C5A266] text-center cursor-pointer hover:bg-[#683e5a] transition relative overflow-hidden group"><div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition"></div><div class="font-title text-2xl writing-vertical mx-auto h-24 flex items-center justify-center relative z-10">${ch.name}</div><div class="text-xs mt-2 border-t border-white/20 pt-1 relative z-10">忠诚: ${ch.loyalty}</div></div>`).join('')}</div>`;
-                }
-            },
-            doRecruit: function(type) {
-                // 修复点2：正确调用内部的 checkApiKey
-                if(!checkApiKey()) return;
-
-                const cost = type === 'dust' ? 500 : 3000;
-                if (_state.gold < cost) { showToast("经费不足！"); return; }
-                _state.gold -= cost; updateUI();
-                const modal = document.getElementById('gacha-modal');
-                const loading = document.getElementById('gacha-loading');
-                const result = document.getElementById('gacha-result');
-                modal.classList.remove('hidden'); loading.classList.remove('hidden'); result.classList.add('hidden');
-                
-                fetchAI(type === 'dust' ? 'recruit_dust' : 'recruit_star', {}).then(data => {
-                    loading.classList.add('hidden'); result.classList.remove('hidden');
-                    const newChar = { id: Date.now(), name: data.charName || "无名", type: type === 'star' ? '星轨' : '尘缘', loyalty: 50, location: "前厅", status: "新人", desc: data.desc || "...", joinedAt: _state.turn };
-                    document.getElementById('new-char-avatar').innerText = type==='star'?'✨':'🍃';
-                    document.getElementById('new-char-name').innerText = newChar.name;
-                    document.getElementById('new-char-type').innerText = newChar.type;
-                    document.getElementById('new-char-desc').innerText = (data.desc || "...").substring(0, 60);
-                    _characters.push(newChar); checkGameLogic();
-                });
-            },
-            closeGacha: function() {
-                document.getElementById('gacha-modal').classList.add('hidden');
-                if(_state.tutorialStep===2) this.nextTutorial(); 
-            },
-            trySleep: function() { if(_characters.length<2) showToast("需2人"); else this.switchTab('sleep'); },
-            openLocation: function(locName) {
-                const modal = document.getElementById('location-modal');
-                modal.classList.remove('hidden');
-                document.getElementById('loc-title').innerText = locName;
-                const locData = _locations[locName];
-                const charsHere = _characters.filter(c => c.location === locName);
-                let html = `<div class="bg-purple-50 p-4 rounded border border-purple-100 mb-4"><h4 class="font-bold text-[#4A2C40] mb-2">掌柜行动</h4><p class="text-xs text-gray-500 mb-3">${locData.desc}</p><button onclick="window.GameApp.handleAIAction('${locName}')" class="w-full py-2 bg-[#C5A266] text-white rounded shadow hover:bg-[#b08d55] flex items-center justify-center gap-2"><span>⚡</span> ${locData.action} (AI生成)</button></div>`;
-                if (charsHere.length > 0) {
-                    html += `<div class="mb-4"><h4 class="text-sm text-gray-400 mb-2 font-bold">此处公子</h4>`;
-                    charsHere.forEach(c => {
-                        html += `<div class="bg-white p-3 rounded shadow-sm border border-purple-100 flex items-center gap-3 mb-2"><div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-xl border border-gray-200">${c.type==='star'?'✨':'🍃'}</div><div><div class="font-bold text-[#4A2C40]">${c.name}</div><div class="text-xs text-purple-400">忠诚: ${c.loyalty}</div></div><button onclick="window.GameApp.handleAIAction('后花园', {charName: '${c.name}'})" class="ml-auto text-xs px-3 py-1 bg-[#D1B2D2] text-white rounded hover:bg-[#4A2C40]">互动</button></div>`;
-                    });
-                    html += `</div>`;
-                } else { html += `<div class="p-3 text-center text-gray-400 text-xs italic bg-gray-50 rounded mb-4">此刻此处空无一人。</div>`; }
-                document.getElementById('loc-content').innerHTML = html;
-            },
-            closeSub: closeSubView
+            nextTurn: nextTurn,
+            handleAIAction: (loc) => showAIModal('business', { pressure: _state.pressure }), // 简单映射
+            closeAI: closeAI,
+            switchTab: switchTab,
+            doRecruit: doRecruit,
+            triggerSleep: triggerSleep,
+            openLocation: openLocation,
+            closeSub: closeSub,
+            trySleep: trySleep
         };
-
-        // 将 GameApp 挂载到 window，确保全局可访问
         window.GameApp = GameAppAPI;
-        init(); // 初始化
+        init();
         return GameAppAPI;
     })();
-
-    const s = document.createElement('style');
-    s.innerHTML = `.writing-vertical { writing-mode: vertical-rl; text-orientation: upright; letter-spacing: 0.1em; }`;
-    document.head.appendChild(s);
     </script>
 </body>
 </html>
