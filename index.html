@@ -47,23 +47,10 @@
             50% { transform: translate(-50%, -110%) scale(1.1); filter: drop-shadow(0 0 15px #C5A266); } 
         }
 
-        /* ---------------------------------------------------- */
-        /* 🔴 引导遮罩层修复 (Tutorial Mask Fix) */
-        /* ---------------------------------------------------- */
-        .tutorial-mask { 
-            position: fixed; 
-            inset: 0; 
-            z-index: 9999; 
-            /* 修改这里：降低透明度 (0.7 -> 0.4)，增加模糊感 */
-            background: rgba(0,0,0,0.4); 
-            backdrop-filter: blur(2px);
-            pointer-events: auto; 
-        }
-        
+        /* 引导遮罩层 */
+        .tutorial-mask { position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.4); backdrop-filter: blur(2px); pointer-events: auto; }
         .highlight-box { 
-            position: absolute; 
-            /* 这里也要同步降低反向阴影的透明度 */
-            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.4); 
+            position: absolute; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.4); 
             border: 2px solid #C5A266; border-radius: 8px; pointer-events: none; 
             z-index: 10000; animation: pulse 2s infinite; 
         }
@@ -90,7 +77,6 @@
                     “别人笑你离经叛道，你笑他们看不穿。<br>这揽月轩，便是你的王国，亦是你的后宫。”
                 </p>
                 <div class="w-full border-t border-[#4A2C40]/20"></div>
-                <p class="text-xs text-[#4A2C40] font-bold tracking-widest opacity-80">- 请选择入梦难度 -</p>
                 <div class="flex flex-col w-full gap-3">
                     <button onclick="window.GameApp.start('easy')" class="py-3 bg-white/90 border border-[#D1B2D2] text-[#4A2C40] rounded shadow font-bold hover:bg-[#D1B2D2] active:scale-95 transition">来者不拒 (8000两)</button>
                     <button onclick="window.GameApp.start('normal')" class="py-3 bg-white/90 border border-[#C5A266] text-[#4A2C40] rounded shadow font-bold hover:bg-[#C5A266] active:scale-95 transition">偶有闲趣 (5000两)</button>
@@ -120,7 +106,7 @@
                         
                         <div id="npc-layer" class="absolute inset-0 pointer-events-none"></div>
 
-                        <!-- 场景 Pins -->
+                        <!-- 场景 Pins (加上 ID) -->
                         <div id="pin-寻芳阁" onclick="window.GameApp.switchTab('gacha')" class="map-pin flex flex-col items-center group" style="top: 82%; left: 18%;">
                             <div class="bg-white/95 px-2 py-0.5 rounded text-xs font-bold mb-1 shadow text-[#4A2C40]">寻芳阁</div>
                             <div class="w-14 h-14 rounded-full bg-[#D1B2D2] border-2 border-white flex items-center justify-center text-2xl shadow ring-4 ring-[#D1B2D2]/30">🌸</div>
@@ -144,6 +130,7 @@
                     </div>
                 </div>
                 
+                <!-- 子界面: 修复了 z-index 穿透问题 -->
                 <div id="sub-views" class="absolute inset-0 z-[100] hidden flex flex-col p-4 animate-slide-up overflow-hidden bg-[#FDFBF7]">
                     <button onclick="window.GameApp.closeSub()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 z-50 text-xl font-bold">✕</button>
                     <div id="view-content" class="h-full overflow-y-auto pb-20"></div>
@@ -165,9 +152,22 @@
             <div class="glass-panel w-full max-w-md p-6 rounded-lg animate-[fadeIn_0.2s]">
                 <h3 class="font-title text-2xl text-[#4A2C40] mb-4 border-b pb-2">游戏设置</h3>
                 <div class="space-y-4">
-                    <div><label class="block text-sm font-bold text-gray-700 mb-1">模型选择</label><select id="api-model-select" class="w-full p-2 border rounded text-sm"><option value="gemini">Google Gemini</option><option value="deepseek">DeepSeek</option></select></div>
-                    <div><label class="block text-sm font-bold text-gray-700 mb-1">API Key</label><input id="api-key-input" type="password" class="w-full p-2 border rounded text-sm"></div>
-                    <button onclick="window.GameApp.saveSettings()" class="w-full bg-[#4A2C40] text-white py-2 rounded">保存</button>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">AI 厂商选择</label>
+                        <select id="api-model-select" class="w-full p-2 border border-gray-300 rounded text-sm bg-white outline-none focus:border-[#C5A266]">
+                            <option value="gemini">Google Gemini (推荐)</option>
+                            <option value="deepseek">DeepSeek (备用)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">对应 API Key</label>
+                        <input id="api-key-input" type="password" placeholder="请输入对应模型的 API Key" class="w-full p-2 border border-gray-300 rounded text-sm bg-white focus:border-[#C5A266] focus:ring-1 focus:ring-[#C5A266] outline-none">
+                        <p class="text-[10px] text-gray-500 mt-1">* 必填。Gemini 需由 Google AI Studio 提供；DeepSeek 需由官网提供。</p>
+                    </div>
+                    <div class="flex gap-2 pt-2">
+                        <button onclick="window.GameApp.saveSettings()" class="flex-1 bg-[#4A2C40] text-white py-2 rounded hover:bg-[#2A1C20]">保存并关闭</button>
+                        <button onclick="document.getElementById('settings-modal').classList.add('hidden')" class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100">取消</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -193,7 +193,7 @@
         
         <div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 bg-[#4A2C40] text-white px-4 py-2 rounded shadow-lg transform -translate-y-[200%] transition duration-300 z-[1003] text-sm"></div>
 
-        <!-- 新手引导遮罩 (透明度已调至 0.4) -->
+        <!-- 新手引导遮罩 (回归) -->
         <div id="tutorial-overlay" class="tutorial-mask hidden flex items-center justify-center text-white text-center p-8">
             <div class="relative z-[1001] w-full max-w-xs">
                 <!-- 高亮框 -->
@@ -259,6 +259,8 @@
             } catch(e) { console.error(e); showToast("连接失败: " + e.message); return null; }
         }
 
+        // --- 游戏逻辑 ---
+
         function startGame(diff) {
             if(diff === 'easy') { _state.gold = 8000; _state.pressure = 0; }
             else if(diff === 'hard') { _state.gold = 2000; _state.pressure = 30; }
@@ -291,10 +293,11 @@
             if(step === 1) {
                 title.innerText = "欢迎掌柜";
                 desc.innerText = "我是您的管家。这里是您的【剧情书简】，一切故事都将从这里开始。";
-                highlightElement('nav-story'); 
+                highlightElement('nav-story'); // 高亮书简按钮
             } else if(step === 2) {
                 document.getElementById('tutorial-overlay').classList.add('hidden');
-                switchTab('story'); 
+                switchTab('story'); // 强制打开书简
+                // 这里利用 CSS 引导高亮任务
             }
         }
         
@@ -366,6 +369,8 @@
             updateUI();
         }
 
+        // --- 交互功能 ---
+        
         async function showAIModal(type, context) {
             const modal = document.getElementById('ai-response-modal');
             const loading = document.getElementById('ai-loading');
@@ -446,6 +451,7 @@
             const elDate = document.getElementById('ui-date'); if(elDate) elDate.innerText = `第${_state.turn}回合`;
         }
 
+        // --- 页面路由 ---
         function switchTab(tab) {
             document.getElementById('sub-views').classList.remove('hidden');
             const c = document.getElementById('view-content'); c.innerHTML = '';
@@ -469,6 +475,7 @@
                                 </div>
                                 <p class="text-sm text-gray-600 leading-relaxed">${nextMission.desc}</p>
                             </div>
+                            <!-- 已完成任务展示 -->
                             ${STORY_CHAIN.filter(m=>m.done).map(m => `
                                 <div class="border border-gray-100 rounded p-3 bg-gray-50 opacity-60">
                                     <div class="flex justify-between"><span class="font-bold text-gray-500">${m.title}</span><span class="text-xs text-green-600">已完成</span></div>
@@ -481,6 +488,7 @@
                 }
             } 
             else if(tab === 'gacha') {
+                // 修复：同时显示两个卡池
                 c.innerHTML = `
                 <div class="h-full flex flex-col items-center justify-center text-center">
                     <h2 class="font-title text-4xl mb-4 text-[#4A2C40]">寻芳阁</h2>
