@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <!-- 增强的 Viewport 设置：user-scalable=no, initial-scale=1, minimum-scale=1, maximum-scale=1 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>风月颠倒：京城第一女掌柜</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -121,30 +122,46 @@
                 </div>
             </header>
 
+            <!-- 核心修复区域：地图滚动 -->
+            <!-- 修复逻辑：
+                 1. w-full h-full overflow-auto: 基础滚动
+                 2. hide-scrollbar: 隐藏滚动条增强沉浸感
+                 3. white-space: nowrap: 防止内部元素换行（针对某些旧版安卓webview）
+            -->
             <main id="main-view" class="flex-1 relative overflow-hidden w-full bg-[#FDFBF7]">
-                <div id="view-map" class="absolute inset-0 w-full h-full overflow-auto hide-scrollbar flex justify-center items-center">
-                    <div id="map-wrapper" class="relative shrink-0 transition-transform origin-center" style="height: 100%; aspect-ratio: 16/9;">
-                        <img id="game-map-img" src="" class="h-full w-auto max-w-none pointer-events-none select-none object-cover">
+                <div id="view-map" class="absolute inset-0 w-full h-full overflow-auto hide-scrollbar touch-auto">
+                    <!-- map-wrapper 修复：
+                         1. display: inline-block 或 min-width 强制撑开
+                         2. height: 100% 确保垂直占满
+                         3. aspect-ratio: 16/9 维持比例
+                    -->
+                    <div id="map-wrapper" class="relative shrink-0 transition-transform origin-top-left" style="height: 100%; aspect-ratio: 16/9; min-width: max-content;">
+                        <!-- 图片修复：
+                             1. object-cover: 保证高度填满
+                             2. pointer-events-none: 防止图片拖拽干扰页面滚动
+                             3. 关键：height: 100%, width: auto
+                        -->
+                        <img id="game-map-img" src="" class="h-full w-auto max-w-none pointer-events-none select-none object-cover block">
                         
                         <!-- Pins -->
                         <div id="pin-gacha" onclick="window.GameApp.switchTab('gacha')" class="map-pin flex flex-col items-center group" style="top: 82%; left: 18%;">
-                            <div class="bg-white/95 px-2 py-0.5 rounded text-xs font-bold mb-1 shadow text-[#4A2C40] border border-gray-200">寻芳阁</div>
+                            <div class="bg-white/95 px-2 py-0.5 rounded text-xs font-bold mb-1 shadow text-[#4A2C40] border border-gray-200 whitespace-nowrap">寻芳阁</div>
                             <div class="w-14 h-14 rounded-full bg-[#D1B2D2] border-2 border-white flex items-center justify-center text-2xl shadow-lg ring-4 ring-[#D1B2D2]/30">🌸</div>
                         </div>
                         <div id="pin-sleep" onclick="window.GameApp.trySleep()" class="map-pin flex flex-col items-center group" style="top: 78%; left: 88%;">
-                            <div class="bg-white/95 px-2 py-0.5 rounded text-xs font-bold mb-1 shadow text-[#4A2C40] border border-gray-200">揽月寝殿</div>
+                            <div class="bg-white/95 px-2 py-0.5 rounded text-xs font-bold mb-1 shadow text-[#4A2C40] border border-gray-200 whitespace-nowrap">揽月寝殿</div>
                             <div class="w-14 h-14 rounded-full bg-[#4A2C40] border-2 border-[#C5A266] flex items-center justify-center text-[#C5A266] text-2xl shadow-lg ring-4 ring-[#4A2C40]/30">🌙</div>
                         </div>
                         <div onclick="window.GameApp.openLocation('前厅')" class="map-pin flex flex-col items-center group" style="top: 55%; left: 50%;">
-                            <div class="bg-white/95 px-2 py-0.5 rounded text-xs font-bold mb-1 shadow text-[#4A2C40] border border-gray-200">前厅</div>
+                            <div class="bg-white/95 px-2 py-0.5 rounded text-xs font-bold mb-1 shadow text-[#4A2C40] border border-gray-200 whitespace-nowrap">前厅</div>
                             <div class="w-12 h-12 rounded-full bg-[#C5A266] border-2 border-white flex items-center justify-center text-white text-xl shadow-lg">🏯</div>
                         </div>
                         <div onclick="window.GameApp.openLocation('后花园')" class="map-pin flex flex-col items-center group" style="top: 35%; left: 20%;">
-                            <div class="bg-white/95 px-2 py-0.5 rounded text-xs font-bold mb-1 shadow text-[#4A2C40] border border-gray-200">后花园</div>
+                            <div class="bg-white/95 px-2 py-0.5 rounded text-xs font-bold mb-1 shadow text-[#4A2C40] border border-gray-200 whitespace-nowrap">后花园</div>
                             <div class="w-12 h-12 rounded-full bg-[#8FA875] border-2 border-white flex items-center justify-center text-white text-xl shadow-lg">🌿</div>
                         </div>
                         <div onclick="window.GameApp.openLocation('听雨阁')" class="map-pin flex flex-col items-center group" style="top: 25%; left: 75%;">
-                            <div class="bg-white/95 px-2 py-0.5 rounded text-xs font-bold mb-1 shadow text-[#4A2C40] border border-gray-200">听雨阁</div>
+                            <div class="bg-white/95 px-2 py-0.5 rounded text-xs font-bold mb-1 shadow text-[#4A2C40] border border-gray-200 whitespace-nowrap">听雨阁</div>
                             <div class="w-12 h-12 rounded-full bg-[#6B4F5F] border-2 border-white flex items-center justify-center text-white text-xl shadow-lg">📚</div>
                         </div>
                     </div>
@@ -170,7 +187,7 @@
             </nav>
         </section>
 
-        <!-- 设置弹窗 -->
+        <!-- 3. 弹窗系统 -->
         <div id="settings-modal" class="fixed inset-0 z-[2000] bg-black/60 hidden flex items-center justify-center p-6">
             <div class="glass-panel w-full max-w-md p-6 rounded-lg animate-[fadeIn_0.2s]">
                 <h3 class="font-title text-2xl text-[#4A2C40] mb-4 border-b pb-2">游戏设置</h3>
@@ -195,7 +212,6 @@
             </div>
         </div>
 
-        <!-- 通用 Loading/Msg -->
         <div id="location-modal" class="fixed inset-0 z-[60] bg-black/50 hidden flex items-end md:items-center justify-center p-4">
             <div class="w-full md:max-w-md bg-[#FDFBF7] rounded-xl shadow-2xl flex flex-col animate-slide-up max-h-[80vh]">
                 <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white rounded-t-xl">
@@ -443,11 +459,12 @@
                 }
             },
             doRecruit: function(type) {
+                // 修复点2：正确调用内部的 checkApiKey
                 if(!checkApiKey()) return;
+
                 const cost = type === 'dust' ? 500 : 3000;
                 if (_state.gold < cost) { showToast("经费不足！"); return; }
                 _state.gold -= cost; updateUI();
-                
                 const modal = document.getElementById('gacha-modal');
                 const loading = document.getElementById('gacha-loading');
                 const result = document.getElementById('gacha-result');
