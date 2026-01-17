@@ -69,6 +69,132 @@
             60% { transform: scale(1.05) translateY(-10px); opacity: 1; }
             100% { transform: scale(1) translateY(0); opacity: 1; }
         }
+        /* ==================== 
+   寻芳阁 - 打印机风格 UI 
+   ==================== */
+:root {
+    --machine-pink: #FFC0CB;
+    --machine-shadow: #FFB7B2;
+    --machine-screen-bg: #F8FDFF;
+    --machine-screen-border: #B2EBF2;
+}
+
+.cute-machine {
+    position: relative;
+    width: 320px; /* 稍微缩小以适应手机 */
+    height: 420px;
+    background: #FFF;
+    border-radius: 40px;
+    border: 6px solid var(--machine-pink);
+    box-shadow: 
+        0 12px 0 var(--machine-shadow),
+        0 20px 40px rgba(0,0,0,0.15),
+        inset 0 -10px 20px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    margin: 0 auto;
+    transition: transform 0.2s;
+    z-index: 10;
+}
+
+/* 机器顶部的装饰线条 */
+.cute-machine::before {
+    content: '';
+    position: absolute;
+    top: 15px;
+    width: 70%;
+    height: 2px;
+    background: #F0F0F0;
+    box-shadow: 0 1px 0 #FFF;
+}
+
+/* 屏幕区域 */
+.machine-screen {
+    width: 100%;
+    height: 160px;
+    background: var(--machine-screen-bg);
+    border: 4px dashed var(--machine-screen-border);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-top: 15px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.screen-icon { font-size: 40px; margin-bottom: 5px; opacity: 0.8; }
+.screen-text { font-size: 14px; color: #00838F; font-weight: bold; }
+
+/* 按钮区域 */
+.machine-controls {
+    display: flex;
+    gap: 15px;
+    width: 100%;
+    justify-content: center;
+}
+
+/* 物理按钮样式 */
+.machine-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+.machine-btn:active { transform: translateY(2px); }
+
+.btn-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    border-bottom: 4px solid rgba(0,0,0,0.1);
+    margin-bottom: 6px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.btn-pink { background: #FF9AAA; color: white; border-color: #E57A8A; }
+.btn-blue { background: #81D4FA; color: white; border-color: #4FC3F7; }
+
+.btn-label {
+    font-size: 10px;
+    font-weight: bold;
+    color: #FF99A4;
+    letter-spacing: 1px;
+}
+
+/* 出纸口 */
+.output-slot {
+    position: absolute;
+    bottom: -12px;
+    width: 60%;
+    height: 12px;
+    background: #37474F;
+    border-radius: 0 0 8px 8px;
+    z-index: 5;
+    box-shadow: 0 4px 0 #263238;
+}
+
+/* 装饰星星 */
+.deco-star {
+    position: absolute;
+    color: #FFD700;
+    font-size: 20px;
+    animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
     </style>
 </head>
 <body class="flex justify-center items-center bg-black">
@@ -666,22 +792,48 @@
                 } else {
                     c.innerHTML = `<div class="p-10 text-center text-gray-500">当前阶段剧情已完结。</div>`;
                 }
-            } 
+            }
+            
             else if(tab === 'gacha') {
                 c.innerHTML = `
-                <div class="h-full flex flex-col items-center justify-center text-center">
-                    <h2 class="font-title text-4xl mb-4 text-[#4A2C40]">寻芳阁</h2>
-                    <p class="text-sm text-gray-500 mb-8">消耗金钱，寻找与你有缘的公子</p>
-                    <div class="flex gap-6">
-                        <div onclick="window.GameApp.doRecruit('recruit_dust')" class="border-2 border-dashed border-gray-400 p-6 w-36 rounded-lg cursor-pointer hover:bg-white transition bg-white/50">
-                            <div class="text-4xl mb-2">🍃</div><div class="font-bold text-[#4A2C40]">尘缘</div><div class="text-xs text-gray-500 mt-1">消耗 500</div>
+                <div class="h-full flex flex-col items-center justify-center relative overflow-hidden">
+                    <h2 class="font-title text-3xl mb-2 text-[#4A2C40] z-20">寻芳阁</h2>
+                    <p class="text-xs text-gray-500 mb-6 z-20">消耗金钱，唤醒画中人</p>
+
+                    <div class="cute-machine">
+                        <div class="deco-star" style="top: -15px; left: -10px;">✨</div>
+                        <div class="deco-star" style="top: 20px; right: -20px; animation-delay: 1s;">✨</div>
+
+                        <div class="w-full flex justify-center items-center gap-2 mb-1 opacity-80">
+                            <div class="w-1.5 h-1.5 rounded-full bg-pink-400"></div>
+                            <div class="text-pink-400 font-bold tracking-widest text-[10px]">FENG YUE GACHA</div>
+                            <div class="w-1.5 h-1.5 rounded-full bg-pink-400"></div>
                         </div>
-                        <div onclick="window.GameApp.doRecruit('recruit_star')" class="border-2 border-[#C5A266] bg-[#4A2C40] p-6 w-36 rounded-lg cursor-pointer hover:shadow-xl hover:-translate-y-1 transition text-[#EAD7C3]">
-                            <div class="text-4xl mb-2">✨</div><div class="font-bold">星轨</div><div class="text-xs opacity-75 mt-1">消耗 3000</div>
+
+                        <div class="machine-screen">
+                            <div class="screen-icon">🌸</div>
+                            <div class="screen-text">准备就绪<br><span class="text-xs font-normal opacity-70">点击下方按钮启动</span></div>
                         </div>
+
+                        <div class="machine-controls">
+                            <div onclick="window.GameApp.doRecruit('recruit_dust')" class="machine-btn">
+                                <div class="btn-circle btn-blue">🍃</div>
+                                <div class="btn-label text-blue-400">尘缘(500)</div>
+                            </div>
+
+                            <div onclick="window.GameApp.doRecruit('recruit_star')" class="machine-btn">
+                                <div class="btn-circle btn-pink">💖</div>
+                                <div class="btn-label text-pink-400">星轨(3000)</div>
+                            </div>
+                        </div>
+
+                        <div class="output-slot"></div>
                     </div>
+                    
+                    <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,192,203,0.2)_0%,transparent_70%)] pointer-events-none z-0"></div>
                 </div>`;
             }
+
             else if(tab === 'roster') {
                  if (_characters.length === 0) c.innerHTML = "<p class='text-center text-gray-500 mt-10'>名录空空如也。</p>";
                  else c.innerHTML = `<h2 class="font-title text-3xl mb-6 text-center text-[#4A2C40]">蓝颜名录</h2><div class="space-y-3 max-w-2xl mx-auto pb-10">${_characters.map(ch => `<div class="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:shadow-md bg-white transition"><div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-xl border border-gray-200">${ch.type.includes('星')?'✨':'🍃'}</div><div class="flex-1"><div class="flex justify-between"><span class="font-bold text-[#4A2C40]">${ch.name}</span><span class="text-xs text-gray-400">入阁时间: 第${ch.joinedAt||1}回合</span></div><div class="text-xs text-gray-500 line-clamp-1 mt-1">${ch.desc}</div></div></div>`).join('')}</div>`;
