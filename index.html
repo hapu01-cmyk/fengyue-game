@@ -60,6 +60,15 @@
         .status-danger { color: #EF4444; }
         .animate-slide-up { animation: slideUp 0.3s ease-out; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes zoomIn {
+            0% { transform: scale(0.5) translateY(50px); opacity: 0; }
+            60% { transform: scale(1.05) translateY(-10px); opacity: 1; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
     </style>
 </head>
 <body class="flex justify-center items-center bg-black">
@@ -216,6 +225,27 @@
         </div>
         
         <div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 bg-[#4A2C40] text-white px-4 py-2 rounded shadow-lg transform -translate-y-[200%] transition duration-300 z-[4000] text-sm pointer-events-none"></div>
+
+       <div id="gacha-overlay" class="fixed inset-0 z-[5000] bg-black/95 hidden flex flex-col items-center justify-center p-4">
+    <button onclick="document.getElementById('gacha-overlay').classList.add('hidden')" class="absolute top-4 right-4 text-white/50 hover:text-white text-2xl z-50">✕</button>
+
+    <div id="gacha-loading" class="text-center relative z-20">
+        <div class="w-16 h-16 border-4 border-[#C5A266] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p class="font-title text-2xl text-[#C5A266] animate-pulse">丹青妙笔绘佳人...</p>
+        <p class="text-xs text-gray-500 mt-2">正在从图库加载并切割立绘</p>
+    </div>
+
+    <div id="gacha-results" class="hidden w-full h-full flex flex-col items-center justify-center relative">
+        <div class="absolute inset-0 bg-[radial-gradient(circle,rgba(197,162,102,0.15)_0%,rgba(0,0,0,0)_60%)] animate-pulse pointer-events-none"></div>
+
+        <div id="single-card-container" class="relative z-10 w-full max-w-[320px]">
+            </div>
+
+        <button onclick="document.getElementById('gacha-overlay').classList.add('hidden')" class="mt-8 px-10 py-3 bg-[#C5A266] text-[#4A2C40] font-bold rounded-full shadow-[0_0_20px_rgba(197,162,102,0.4)] hover:scale-105 transition active:scale-95 animate-[fadeIn_1s_ease-in_0.5s_both]">
+            收入囊中
+        </button>
+    </div>
+</div>
 
         <!-- 新手引导遮罩 (保留) -->
         <div id="tutorial-overlay" class="tutorial-mask hidden flex items-center justify-center text-white text-center p-8">
@@ -660,30 +690,93 @@
                  c.innerHTML = `<div class="text-center mb-6"><h2 class="font-title text-3xl text-[#4A2C40]">揽月寝殿</h2><p class="text-gray-500 text-sm">今夜由谁伴驾？</p></div><div class="grid grid-cols-2 gap-4 pb-10">${_characters.map(ch => `<div onclick="window.GameApp.triggerSleep('${ch.name}', ${JSON.stringify(ch.stats).replace(/"/g, '&quot;')})" class="bg-[#4A2C40] p-4 rounded text-[#EAD7C3] border border-[#C5A266] text-center cursor-pointer hover:bg-[#683e5a] transition"><div class="font-title text-2xl writing-vertical mx-auto h-24 flex items-center justify-center relative z-10">${ch.name}</div><div class="text-xs mt-2 border-t border-white/20 pt-1 relative z-10">忠诚: ${ch.stats.loyalty || 50}</div></div>`).join('')}</div>`;
             }
         }
+        
+        async function doRecruit(type) {
+            // 1. 设定单抽价格
+            const cost = 500; 
+            if (_state.gold < cost) { showToast(`银两不足！需要 ${cost}`); return; }
+            if (!_apiKey) { showToast("请先在设置中配置 API Key"); return; }
 
-        function doRecruit(type) { 
-            // 定义价格
-            const cost = type === 'recruit_star' ? 3000 : 500;
-            
-            // 检查余额
-            if (_state.gold < cost) {
-                showToast(`银两不足！需要 ${cost} 两`);
-                return;
-            }
-
-            // 预扣费（为了防止玩家刷初始，通常点开就扣钱，如果不录用就当面试费了）
-            // 如果你想设计成“录用才扣钱”，请把这两行移到 acceptRecruit 里
+            // 扣钱
             _state.gold -= cost;
             updateUI();
+
+            // 2. 初始化 UI
+            const overlay = document.getElementById('gacha-overlay');
+            const loading = document.getElementById('gacha-loading');
+            const results = document.getElementById('gacha-results');
+            const container = document.getElementById('single-card-container');
             
-            showAIModal(type, { turn: _state.turn }).then(data => {
-                // 如果API报错没生成出来，把钱退回去
-                if (!data) {
-                    _state.gold += cost;
-                    updateUI();
-                }
-            }); 
+            overlay.classList.remove('hidden');
+            loading.classList.remove('hidden');
+            results.classList.add('hidden');
+            container.innerHTML = ''; // 清空旧数据
+
+            try {
+                // 3. 调用单抽 (window.performSingleGacha)
+                const [char] = await window.performSingleGacha(_apiKey, _apiProvider);
+
+                // 4. 渲染结果
+                loading.classList.add('hidden');
+                results.classList.remove('hidden');
+
+                // 存入游戏数据
+                char.pos = { top: 40, left: 40 }; 
+                _characters.push(char);
+
+                // 渲染单张大卡片
+                const isRare = char.type === '星轨';
+                // 稀有卡用金色光晕，普通卡用白光
+                const glow = isRare ? 'shadow-[0_0_50px_rgba(255,215,0,0.5)] border-yellow-400' : 'shadow-[0_0_30px_rgba(255,255,255,0.2)] border-gray-400';
+                const titleColor = isRare ? 'text-yellow-600' : 'text-[#4A2C40]';
+
+                container.innerHTML = `
+                    <div class="bg-[#FDFBF7] rounded-xl overflow-hidden border-[3px] ${glow} flex flex-col animate-[zoomIn_0.6s_cubic-bezier(0.18,0.89,0.32,1.28)]">
+                        <div class="relative w-full aspect-[3/4] bg-gray-100 group">
+                            <img src="${char.avatar}" class="w-full h-full object-cover object-top">
+                            <div class="absolute top-3 right-3 text-sm font-bold px-3 py-1 rounded-full bg-white/90 shadow-sm ${titleColor} backdrop-blur">
+                                ${char.type}
+                            </div>
+                        </div>
+                        
+                        <div class="p-6 text-center space-y-4">
+                            <div>
+                                <h3 class="font-title text-3xl ${titleColor} mb-1">${char.name}</h3>
+                                <p class="text-xs text-gray-400">入阁时间：第 ${_state.turn} 回合</p>
+                            </div>
+                            <p class="text-sm text-gray-600 leading-relaxed italic border-t border-b border-gray-100 py-3">
+                                “${char.desc}”
+                            </p>
+                            
+                            <div class="flex justify-center gap-8 text-xs text-gray-400">
+                                <div class="flex flex-col items-center">
+                                    <span class="scale-90 mb-1">魅力</span>
+                                    <span class="text-xl font-bold text-[#C5A266]">${char.stats.charm || 50}</span>
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <span class="scale-90 mb-1">才情</span>
+                                    <span class="text-xl font-bold text-[#C5A266]">${char.stats.talent || 50}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // 刷新地图小人
+                if (typeof renderMapNPCs === 'function') renderMapNPCs();
+
+            } catch (e) {
+                console.error(e);
+                showToast("招募失败: " + e.message);
+                overlay.classList.add('hidden');
+                _state.gold += cost; // 退款
+                updateUI();
+            }
         }
+        
+       
+
+    
         function openLocation(loc) { 
             // 如果是普通点击，执行随机经营
             if(loc === '前厅') showAIModal('business', { pressure: _state.pressure }); 
@@ -739,6 +832,11 @@
         init();
         return API;
     })();
+    </script>
+    <script type="module">
+    import { performSingleGacha } from './js/gachaSystem.js';
+    // 挂载到全局，让原生 onclick 能调用
+    window.performSingleGacha = performSingleGacha;
     </script>
 </body>
 </html>
